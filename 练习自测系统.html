@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>初级会计备考 - 练习自测系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        h1 { text-align: center; color: white; margin-bottom: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .info { text-align: center; color: white; margin-bottom: 30px; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 15px; border-radius: 10px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .stat-number { font-size: 28px; font-weight: bold; color: #667eea; }
+        .stat-label { color: #666; margin-top: 5px; font-size: 14px; }
+        .main-content { display: grid; grid-template-columns: 280px 1fr; gap: 20px; }
+        .sidebar { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .content { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .subject-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab { padding: 10px 20px; background: #f0f0f0; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; transition: all 0.3s; }
+        .tab:hover { background: #e0e0e0; }
+        .tab.active { background: #667eea; color: white; }
+        .question-types { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .type-btn { padding: 6px 14px; background: #e0e0e0; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; }
+        .type-btn.active { background: #764ba2; color: white; }
+        .question-card { background: #f9f9f9; padding: 20px; margin-bottom: 20px; border-radius: 8px; border-left: 4px solid #667eea; }
+        .question-text { font-size: 16px; margin-bottom: 15px; line-height: 1.6; color: #333; }
+        .options { list-style: none; }
+        .options li { padding: 10px 14px; margin: 6px 0; background: white; border-radius: 6px; cursor: pointer; transition: all 0.3s; border: 2px solid #e0e0e0; font-size: 15px; }
+        .options li:hover { background: #f0f7ff; border-color: #667eea; }
+        .options li.selected { background: #667eea; color: white; border-color: #667eea; }
+        .options li.correct { background: #4CAF50; color: white; border-color: #4CAF50; }
+        .options li.incorrect { background: #f44336; color: white; border-color: #f44336; }
+        .answer-section { margin-top: 15px; padding: 15px; background: #e8f5e9; border-radius: 6px; display: none; font-size: 14px; }
+        .answer-section.show { display: block; }
+        .btn { padding: 10px 24px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; }
+        .btn:hover { background: #5568d3; }
+        .btn-secondary { background: #9e9e9e; }
+        .score { font-size: 24px; font-weight: bold; text-align: center; margin: 20px 0; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px; }
+        .progress { height: 10px; background: #e0e0e0; border-radius: 5px; margin: 20px 0; }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); transition: width 0.5s; }
+        .action-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+        .tip { background: #e3f2fd; padding: 12px; border-radius: 6px; margin: 10px 0; font-size: 14px; border-left: 3px solid #2196F3; }
+        @media (max-width: 768px) { .main-content { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 初级会计备考 - 练习自测系统</h1>
+        <div class="info">
+            <p><strong>📂 PDF 源文件：</strong>/Users/bao/Downloads/会计备考资料/</p>
+            <p><strong>📄 解析时间：</strong>2026-04-08 19:42</p>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card"><div class="stat-number">2</div><div class="stat-label">科目</div></div>
+            <div class="stat-card"><div class="stat-number" id="stat-questions">20</div><div class="stat-label">试题数</div></div>
+            <div class="stat-card"><div class="stat-number" id="stat-answered">0</div><div class="stat-label">已答</div></div>
+            <div class="stat-card"><div class="stat-number" id="stat-accuracy">0%</div><div class="stat-label">正确率</div></div>
+        </div>
+        
+        <div class="main-content">
+            <div class="sidebar">
+                <h3 style="margin-bottom: 15px;">📑 导航</h3>
+                <ul style="list-style: none;">
+                    <li style="padding: 8px; margin: 5px 0; background: #f5f5f5; border-radius: 5px;">💼 初级会计实务</li>
+                    <li style="padding: 8px; margin: 5px 0; background: #f5f5f5; border-radius: 5px;">⚖️ 经济法基础</li>
+                    <li style="padding: 8px; margin: 5px 0; background: #f5f5f5; border-radius: 5px;">📝 单选题</li>
+                    <li style="padding: 8px; margin: 5px 0; background: #f5f5f5; border-radius: 5px;">☑️ 多选题</li>
+                    <li style="padding: 8px; margin: 5px 0; background: #f5f5f5; border-radius: 5px;">✓ 判断题</li>
+                </ul>
+                
+                <h3 style="margin: 20px 0 10px;">💡 备考建议</h3>
+                <div class="tip">📖 每日至少完成 20 道题</div>
+                <div class="tip">📝 记录错题并定期复习</div>
+                <div class="tip">⏰ 模拟考试环境答题</div>
+            </div>
+            
+            <div class="content">
+                <div class="subject-tabs">
+                    <button class="tab active" data-subject="初级会计实务">💼 初级会计实务</button>
+                    <button class="tab" data-subject="经济法基础">⚖️ 经济法基础</button>
+                </div>
+                
+                <div class="question-types">
+                    <button class="type-btn active" data-type="all">全部</button>
+                    <button class="type-btn" data-type="single">单选</button>
+                    <button class="type-btn" data-type="multi">多选</button>
+                    <button class="type-btn" data-type="true_false">判断</button>
+                </div>
+                
+                <div class="progress"><div class="progress-bar" style="width: 0%"></div></div>
+                <div class="score">得分：0 / 0 | 正确率：0%</div>
+                
+                <div id="questions-container"></div>
+                
+                <div class="action-buttons">
+                    <button class="btn" onclick="checkAnswers()">✅ 提交答案</button>
+                    <button class="btn btn-secondary" onclick="showAllAnswers()">👁️ 查看答案</button>
+                    <button class="btn btn-secondary" onclick="resetQuiz()">🔄 重新开始</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const questionsData = [{"subject": "初级会计实务", "pdf": "会计实务复习资料.pdf", "pages": 0, "knowledge_points": [], "questions": [{"id": 1, "type": "single", "subject": "初级会计实务", "text": "1、会计主要的计量单位: 货", "options": [], "answer": "", "explanation": ""}, {"id": 2, "type": "single", "subject": "初级会计实务", "text": "2、会计的主要目标: 提供会计资料和信息，反映企业管理层受托责任履行情况。", "options": [], "answer": "", "explanation": ""}, {"id": 3, "type": "single", "subject": "初级会计实务", "text": "3、会计的基本职能: 核算与监督", "options": [], "answer": "", "explanation": ""}, {"id": 4, "type": "single", "subject": "初级会计实务", "text": "4、会计基本职能之间的关系: 核算是监督的基础，监督是核算质量的保障。", "options": [], "answer": "", "explanation": ""}, {"id": 5, "type": "single", "subject": "初级会计实务", "text": "5、会计的拓展职能包括哪些”参与经济决策、预测经济前景、评价经营业绩。", "options": [], "answer": "", "explanation": ""}, {"id": 6, "type": "single", "subject": "初级会计实务", "text": "6、划分权责发生制和收付实现制的基础: 会计分期假设。", "options": [], "answer": "", "explanation": ""}, {"id": 7, "type": "single", "subject": "初级会计实务", "text": "7、 可比性、实质重于形式和谨慎原则的举例: 可比性: 可比性前后各期会计政策保持一致，不得随意变更; 实质重于形式: 将租入资产 (短期租赁和低值资产租赁除外) 按照自有资产核算; 谦慎原则: 各项资产计提减值准备、固定资产加速折旧。", "options": [], "answer": "", "explanation": ""}, {"id": 8, "type": "single", "subject": "初级会计实务", "text": "8、会计职业道德与会计法律制度的联系: 会计职业道德与会计法律制度在内容上相互渗透、相互吸收; 在作用上相互补充、 相互协调。会计职业道德是会计法律制度的重要补充，会计法律制度是会计职业 道德的最低要求，是会计职业道德的基本制度保障。", "options": [], "answer": "", "explanation": ""}, {"id": 9, "type": "single", "subject": "初级会计实务", "text": "9、会计职业道德的内容: (1) 坚持诚信，守法奉公 --- 第3页 --- @® vaxssenm (2) 坚持准则，守责敬业 (3) 坚持学习，守正创新", "options": [], "answer": "", "explanation": ""}, {"id": 10, "type": "single", "subject": "初级会计实务", "text": "1、资产的特征: (1) 资产应为企业拥有或者控制的资源; (2) 资产预期会给企业带来经济利益 (直接或间接) | (3) 资产是企业过去的交易或事项形成。", "options": [], "answer": "", "explanation": ""}, {"id": 11, "type": "single", "subject": "初级会计实务", "text": "2、收入和费用的日常活动包括: 收入按企业经营业务的主次不同，分为主营业务收入和其他业务收入。 费用包括营业成本、税金及附加和期间费用。", "options": [], "answer": "", "explanation": ""}, {"id": 12, "type": "single", "subject": "初级会计实务", "text": "3、会计科目按反映经济内容的性质不同的分类: 可以分为资产类、负债类、共同类、所有者权益类、成本类、损益类六大类。", "options": [], "answer": "", "explanation": ""}, {"id": 13, "type": "single", "subject": "初级会计实务", "text": "4、账户余额和发生额的计算公式 (计算解方程) : 本期期初余额+本期增加发生额-本期减少发生额=本期期末余额", "options": [], "answer": "", "explanation": ""}, {"id": 14, "type": "single", "subject": "初级会计实务", "text": "5、成本类账户的内容: “生产成本\"制造费用”劳务成本“研发支出\"等科目。", "options": [], "answer": "", "explanation": ""}, {"id": 15, "type": "single", "subject": "初级会计实务", "text": "6、所有者权益类账户的内容: \"实收资本”(或\"股本\") 、“资本公积`“其他综合收益`“鲁余公积`、 “本年利润、 “利润分配*、\"库存股\"等科目。", "options": [], "answer": "", "explanation": ""}, {"id": 16, "type": "single", "subject": "初级会计实务", "text": "7、在借贷记账法下，账户的哪方记增加，哪方登记减少，取决于什么? 取决于账户的性质与所记录经济内容的性质。 --- 第4页 ---", "options": [], "answer": "", "explanation": ""}, {"id": 17, "type": "single", "subject": "初级会计实务", "text": "8、试算平衡的公式及结论: 全部账户本期借方发生额合计 = 全部账户本期贷方发生额合计 全部账户借方期末 (初) 余额合计 = 全部账户贷方期末 (初) 余额合计", "options": [], "answer": "", "explanation": ""}, {"id": 18, "type": "single", "subject": "初级会计实务", "text": "9、哪些是外来、自制原始赁证?哪些不属于原始凭证? 外来原始凭证例如: 取得的增值税专用发票，职工出差报销的飞机票、火车票和 餐饮费发票等。自制原始凭证例如: 产品入库单、领料单、借款单、工资发放明 细表、制造费用分配表等。凡是不能证明经济业务已经完成的文件或证明，不能 作为会计核算的依据。如: 经济合同、材料请购单、生产通知单、银行对账单等。", "options": [], "answer": "", "explanation": ""}, {"id": 19, "type": "single", "subject": "初级会计实务", "text": "10、现金和银行存款之间业务如何填制记账凭证? 同时涉及现金和银行存款的业务, 为避免重复入账, 只编制'付款赁证, 不编制'收 款赁证*。从银行提取现金，编制银行付款凭证，将现金存入银行，编制现金付", "options": [], "answer": "", "explanation": ""}, {"id": 20, "type": "true_false", "subject": "初级会计实务", "text": "11、哪些记账凭证不需要附原始凭证”结账和更正错误。", "options": [], "answer": "", "explanation": ""}]}, {"subject": "经济法基础", "pdf": "经济法复习资料.pdf", "pages": 0, "knowledge_points": [], "questions": []}];
+        let currentSubject = '初级会计实务';
+        let currentType = 'all';
+        let selectedAnswers = {};
+        let totalQuestions = 0;
+        
+        function renderQuestions() {
+            const container = document.getElementById('questions-container');
+            container.innerHTML = '';
+            selectedAnswers = {};
+            
+            const subjectData = questionsData.find(d => d.subject === currentSubject);
+            if (!subjectData || !subjectData.questions) {
+                container.innerHTML = '<p style="text-align:center;color:#999;padding:50px;">暂无试题</p>';
+                return;
+            }
+            
+            let questions = subjectData.questions;
+            if (currentType !== 'all') {
+                questions = questions.filter(q => q.type === currentType);
+            }
+            questions = questions.slice(0, 50);
+            totalQuestions = questions.length;
+            document.getElementById('stat-questions').textContent = totalQuestions;
+            
+            if (questions.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:#999;padding:50px;">该题型暂无试题</p>';
+                return;
+            }
+            
+            questions.forEach((q, index) => {
+                const card = document.createElement('div');
+                card.className = 'question-card';
+                card.innerHTML = `
+                    <div class="question-text">${index + 1}. ${q.text}</div>
+                    <ul class="options" data-question="${index}">
+                        ${q.options.map((opt, i) => `<li data-option="${i}">${opt}</li>`).join('')}
+                    </ul>
+                    <div class="answer-section" id="answer-${index}">
+                        <strong>✅ 正确答案：</strong> ${q.answer}<br>
+                        ${q.explanation ? `<strong>📝 解析：</strong> ${q.explanation}` : ''}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            
+            document.querySelectorAll('.options li').forEach(li => {
+                li.addEventListener('click', function() {
+                    const qIdx = this.parentElement.dataset.question;
+                    const oIdx = this.dataset.option;
+                    this.parentElement.querySelectorAll('li').forEach(l => l.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedAnswers[qIdx] = oIdx;
+                    updateProgress();
+                });
+            });
+            
+            updateProgress();
+        }
+        
+        function updateProgress() {
+            const answered = Object.keys(selectedAnswers).length;
+            const percent = totalQuestions > 0 ? (answered / totalQuestions) * 100 : 0;
+            document.querySelector('.progress-bar').style.width = percent + '%';
+            document.getElementById('stat-answered').textContent = answered;
+        }
+        
+        function checkAnswers() {
+            document.querySelectorAll('.answer-section').forEach(a => a.classList.add('show'));
+            let correct = 0, total = 0;
+            
+            document.querySelectorAll('.options').forEach(ul => {
+                const qIdx = ul.dataset.question;
+                const selected = selectedAnswers[qIdx];
+                if (selected !== undefined) {
+                    total++;
+                    const opts = ul.querySelectorAll('li');
+                    if (opts[selected]) {
+                        opts[selected].classList.add('correct');
+                        correct++;
+                    }
+                }
+            });
+            
+            const accuracy = total > 0 ? ((correct / total) * 100).toFixed(1) : 0;
+            document.querySelector('.score').textContent = `得分：${correct} / ${total} | 正确率：${accuracy}%`;
+            document.getElementById('stat-accuracy').textContent = accuracy + '%';
+            document.querySelector('.score').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function showAllAnswers() {
+            document.querySelectorAll('.answer-section').forEach(a => a.classList.add('show'));
+        }
+        
+        function resetQuiz() {
+            selectedAnswers = {};
+            document.querySelectorAll('.answer-section').forEach(a => a.classList.remove('show'));
+            document.querySelectorAll('.options li').forEach(li => li.classList.remove('selected', 'correct', 'incorrect'));
+            document.querySelector('.progress-bar').style.width = '0%';
+            document.querySelector('.score').textContent = '得分：0 / 0 | 正确率：0%';
+            document.getElementById('stat-answered').textContent = '0';
+            document.getElementById('stat-accuracy').textContent = '0%';
+            renderQuestions();
+        }
+        
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                currentSubject = this.dataset.subject;
+                currentType = 'all';
+                document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+                document.querySelector('.type-btn[data-type="all"]').classList.add('active');
+                resetQuiz();
+            });
+        });
+        
+        document.querySelectorAll('.type-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentType = this.dataset.type;
+                resetQuiz();
+            });
+        });
+        
+        renderQuestions();
+    </script>
+</body>
+</html>

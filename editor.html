@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>初级会计备考 - 题库编辑器</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { text-align: center; color: #333; margin-bottom: 30px; }
+        .toolbar { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .btn { padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        .btn:hover { background: #5568d3; }
+        .btn-success { background: #4CAF50; }
+        .btn-warning { background: #ff9800; }
+        .btn-danger { background: #f44336; }
+        .question-list { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .question-item { padding: 20px; border-bottom: 1px solid #e0e0e0; }
+        .question-item:hover { background: #f9f9f9; }
+        .question-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .question-type { display: inline-block; padding: 4px 10px; background: #e0e0e0; border-radius: 4px; font-size: 12px; }
+        .question-type.single { background: #bbdefb; color: #1976d2; }
+        .question-type.multi { background: #c8e6c9; color: #388e3c; }
+        .question-type.true_false { background: #fff3e0; color: #f57c00; }
+        .question-type.calculation { background: #f3e5f5; color: #7b1fa2; }
+        .question-actions { display: flex; gap: 5px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+        .modal.show { display: flex; align-items: center; justify-content: center; }
+        .modal-content { background: white; padding: 30px; border-radius: 10px; width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: bold; color: #333; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }
+        .form-group textarea { min-height: 100px; resize: vertical; }
+        .options-editor { margin-top: 10px; }
+        .option-item { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
+        .option-item input { flex: 1; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 15px; border-radius: 10px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .stat-number { font-size: 24px; font-weight: bold; color: #667eea; }
+        .stat-label { color: #666; margin-top: 5px; font-size: 13px; }
+        .filter-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .filter-bar select, .filter-bar input { padding: 8px 12px; border: 1px solid #ddd; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 初级会计备考 - 题库编辑器</h1>
+        
+        <div class="stats">
+            <div class="stat-card"><div class="stat-number" id="stat-total">0</div><div class="stat-label">总题数</div></div>
+            <div class="stat-card"><div class="stat-number" id="stat-single">0</div><div class="stat-label">单选题</div></div>
+            <div class="stat-card"><div class="stat-number" id="stat-multi">0</div><div class="stat-label">多选题</div></div>
+            <div class="stat-card"><div class="stat-number" id="stat-truefalse">0</div><div class="stat-label">判断题</div></div>
+            <div class="stat-card"><div class="stat-number" id="stat-calculation">0</div><div class="stat-label">计算题</div></div>
+        </div>
+        
+        <div class="toolbar">
+            <button class="btn" onclick="loadLibrary()">📂 加载题库</button>
+            <button class="btn btn-success" onclick="showAddModal()">➕ 添加题目</button>
+            <button class="btn btn-warning" onclick="exportLibrary()">📥 导出题库</button>
+            <button class="btn" onclick="importLibrary()">📤 导入题库</button>
+            <input type="file" id="file-input" style="display:none" onchange="handleFileImport(event)">
+        </div>
+        
+        <div class="filter-bar">
+            <select id="filter-subject" onchange="filterQuestions()">
+                <option value="all">全部科目</option>
+                <option value="初级会计实务">初级会计实务</option>
+                <option value="经济法基础">经济法基础</option>
+            </select>
+            <select id="filter-type" onchange="filterQuestions()">
+                <option value="all">全部题型</option>
+                <option value="single">单选题</option>
+                <option value="multi">多选题</option>
+                <option value="true_false">判断题</option>
+                <option value="calculation">计算分析题</option>
+            </select>
+            <input type="text" id="search-keyword" placeholder="搜索题目..." oninput="filterQuestions()">
+        </div>
+        
+        <div class="question-list" id="question-list"></div>
+    </div>
+    
+    <!-- 添加/编辑题目模态框 -->
+    <div class="modal" id="question-modal">
+        <div class="modal-content">
+            <h2 id="modal-title" style="margin-bottom: 20px;">添加题目</h2>
+            
+            <div class="form-group">
+                <label>科目 *</label>
+                <select id="edit-subject">
+                    <option value="初级会计实务">初级会计实务</option>
+                    <option value="经济法基础">经济法基础</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>题型 *</label>
+                <select id="edit-type" onchange="updateOptionsEditor()">
+                    <option value="single">单选题</option>
+                    <option value="multi">多选题</option>
+                    <option value="true_false">判断题</option>
+                    <option value="calculation">计算分析题</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>题目内容 *</label>
+                <textarea id="edit-text" placeholder="请输入题目内容..."></textarea>
+            </div>
+            
+            <div class="form-group" id="options-group">
+                <label>选项 *</label>
+                <div class="options-editor" id="options-editor">
+                    <div class="option-item"><input type="text" placeholder="选项 A" class="option-input" data-index="0"><button class="btn btn-danger" onclick="removeOption(0)">删除</button></div>
+                    <div class="option-item"><input type="text" placeholder="选项 B" class="option-input" data-index="1"><button class="btn btn-danger" onclick="removeOption(1)">删除</button></div>
+                    <div class="option-item"><input type="text" placeholder="选项 C" class="option-input" data-index="2"><button class="btn btn-danger" onclick="removeOption(2)">删除</button></div>
+                    <div class="option-item"><input type="text" placeholder="选项 D" class="option-input" data-index="3"><button class="btn btn-danger" onclick="removeOption(3)">删除</button></div>
+                </div>
+                <button class="btn" onclick="addOption()" style="margin-top: 10px;">+ 添加选项</button>
+            </div>
+            
+            <div class="form-group">
+                <label>正确答案 *</label>
+                <input type="text" id="edit-answer" placeholder="例如：A 或 A、B、C">
+            </div>
+            
+            <div class="form-group">
+                <label>答案解析</label>
+                <textarea id="edit-explanation" placeholder="请输入题目解析..."></textarea>
+            </div>
+            
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 30px;">
+                <button class="btn btn-danger" onclick="closeModal()">取消</button>
+                <button class="btn btn-success" onclick="saveQuestion()">💾 保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let questionsData = [];
+        let filteredQuestions = [];
+        let editingIndex = -1;
+        
+        // 加载题库
+        function loadLibrary() {
+            fetch('优化题库_完整版.json')
+                .then(r => r.json())
+                .then(data => {
+                    questionsData = data.flatMap(d => d.questions || []);
+                    filteredQuestions = [...questionsData];
+                    updateStats();
+                    renderQuestions();
+                    alert(`✅ 加载成功！共${questionsData.length}道题`);
+                })
+                .catch(e => {
+                    alert('❌ 加载失败：' + e.message);
+                });
+        }
+        
+        // 更新统计
+        function updateStats() {
+            document.getElementById('stat-total').textContent = questionsData.length;
+            document.getElementById('stat-single').textContent = questionsData.filter(q => q.type === 'single').length;
+            document.getElementById('stat-multi').textContent = questionsData.filter(q => q.type === 'multi').length;
+            document.getElementById('stat-truefalse').textContent = questionsData.filter(q => q.type === 'true_false').length;
+            document.getElementById('stat-calculation').textContent = questionsData.filter(q => q.type === 'calculation').length;
+        }
+        
+        // 渲染题目列表
+        function renderQuestions() {
+            const container = document.getElementById('question-list');
+            container.innerHTML = '';
+            
+            filteredQuestions.forEach((q, index) => {
+                const typeName = {'single':'单选题','multi':'多选题','true_false':'判断题','calculation':'计算分析题'}[q.type] || '单选题';
+                
+                const item = document.createElement('div');
+                item.className = 'question-item';
+                item.innerHTML = `
+                    <div class="question-header">
+                        <span class="question-type ${q.type}">${typeName}</span>
+                        <span style="color: #666; font-size: 13px;">${q.subject}</span>
+                    </div>
+                    <div style="margin-bottom: 10px;">${index + 1}. ${q.text}</div>
+                    <div style="color: #4CAF50; margin-bottom: 10px;"><strong>答案：</strong>${q.answer || '暂无'}</div>
+                    <div class="question-actions">
+                        <button class="btn" onclick="editQuestion(${index})">✏️ 编辑</button>
+                        <button class="btn btn-danger" onclick="deleteQuestion(${index})">🗑️ 删除</button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+        
+        // 筛选题目
+        function filterQuestions() {
+            const subject = document.getElementById('filter-subject').value;
+            const type = document.getElementById('filter-type').value;
+            const keyword = document.getElementById('search-keyword').value;
+            
+            filteredQuestions = questionsData.filter(q => {
+                const matchSubject = subject === 'all' || q.subject === subject;
+                const matchType = type === 'all' || q.type === type;
+                const matchKeyword = !keyword || q.text.includes(keyword);
+                return matchSubject && matchType && matchKeyword;
+            });
+            
+            renderQuestions();
+        }
+        
+        // 显示添加模态框
+        function showAddModal() {
+            editingIndex = -1;
+            document.getElementById('modal-title').textContent = '添加题目';
+            document.getElementById('edit-subject').value = '初级会计实务';
+            document.getElementById('edit-type').value = 'single';
+            document.getElementById('edit-text').value = '';
+            document.getElementById('edit-answer').value = '';
+            document.getElementById('edit-explanation').value = '';
+            updateOptionsEditor();
+            document.getElementById('question-modal').classList.add('show');
+        }
+        
+        // 更新选项编辑器
+        function updateOptionsEditor() {
+            const type = document.getElementById('edit-type').value;
+            const group = document.getElementById('options-group');
+            const editor = document.getElementById('options-editor');
+            
+            if (type === 'true_false') {
+                group.style.display = 'none';
+            } else {
+                group.style.display = 'block';
+                editor.innerHTML = '';
+                const labels = ['A', 'B', 'C', 'D', 'E', 'F'];
+                for (let i = 0; i < 4; i++) {
+                    editor.innerHTML += `
+                        <div class="option-item">
+                            <span style="width: 30px; font-weight: bold;">${labels[i]}.</span>
+                            <input type="text" placeholder="选项${labels[i]}" class="option-input" data-index="${i}">
+                            <button class="btn btn-danger" onclick="removeOption(${i})">删除</button>
+                        </div>
+                    `;
+                }
+            }
+        }
+        
+        // 添加选项
+        function addOption() {
+            const editor = document.getElementById('options-editor');
+            const index = editor.querySelectorAll('.option-item').length;
+            const label = String.fromCharCode(65 + index);
+            editor.innerHTML += `
+                <div class="option-item">
+                    <span style="width: 30px; font-weight: bold;">${label}.</span>
+                    <input type="text" placeholder="选项${label}" class="option-input" data-index="${index}">
+                    <button class="btn btn-danger" onclick="removeOption(${index})">删除</button>
+                </div>
+            `;
+        }
+        
+        // 删除选项
+        function removeOption(index) {
+            const editor = document.getElementById('options-editor');
+            const items = editor.querySelectorAll('.option-item');
+            if (items.length > 2) {
+                items[index].remove();
+            }
+        }
+        
+        // 编辑题目
+        function editQuestion(index) {
+            editingIndex = index;
+            const q = filteredQuestions[index];
+            
+            document.getElementById('modal-title').textContent = '编辑题目';
+            document.getElementById('edit-subject').value = q.subject;
+            document.getElementById('edit-type').value = q.type;
+            document.getElementById('edit-text').value = q.text;
+            document.getElementById('edit-answer').value = q.answer || '';
+            document.getElementById('edit-explanation').value = q.explanation || '';
+            
+            updateOptionsEditor();
+            
+            if (q.options && q.options.length > 0) {
+                const inputs = document.querySelectorAll('.option-input');
+                q.options.forEach((opt, i) => {
+                    if (inputs[i]) inputs[i].value = opt;
+                });
+            }
+            
+            document.getElementById('question-modal').classList.add('show');
+        }
+        
+        // 保存题目
+        function saveQuestion() {
+            const subject = document.getElementById('edit-subject').value;
+            const type = document.getElementById('edit-type').value;
+            const text = document.getElementById('edit-text').value;
+            const answer = document.getElementById('edit-answer').value;
+            const explanation = document.getElementById('edit-explanation').value;
+            
+            if (!text || !answer) {
+                alert('❌ 请填写题目内容和正确答案');
+                return;
+            }
+            
+            const options = [];
+            if (type !== 'true_false') {
+                document.querySelectorAll('.option-input').forEach(input => {
+                    if (input.value.trim()) options.push(input.value.trim());
+                });
+            }
+            
+            const question = {
+                id: Date.now(),
+                type,
+                subject,
+                text,
+                options: options.length > 0 ? options : ['✓ 正确', '✗ 错误'],
+                answer,
+                explanation
+            };
+            
+            if (editingIndex >= 0) {
+                filteredQuestions[editingIndex] = question;
+                const globalIndex = questionsData.findIndex(q => q.id === filteredQuestions[editingIndex].id);
+                if (globalIndex >= 0) questionsData[globalIndex] = question;
+            } else {
+                questionsData.push(question);
+                filteredQuestions.push(question);
+            }
+            
+            updateStats();
+            renderQuestions();
+            closeModal();
+            alert('✅ 保存成功！');
+        }
+        
+        // 删除题目
+        function deleteQuestion(index) {
+            if (confirm('确定要删除这道题目吗？')) {
+                const q = filteredQuestions[index];
+                const globalIndex = questionsData.findIndex(qq => qq.id === q.id);
+                if (globalIndex >= 0) questionsData.splice(globalIndex, 1);
+                filteredQuestions.splice(index, 1);
+                updateStats();
+                renderQuestions();
+            }
+        }
+        
+        // 关闭模态框
+        function closeModal() {
+            document.getElementById('question-modal').classList.remove('show');
+        }
+        
+        // 导出题库
+        function exportLibrary() {
+            const data = [{
+                subject: '初级会计实务',
+                questions: questionsData.filter(q => q.subject === '初级会计实务')
+            }, {
+                subject: '经济法基础',
+                questions: questionsData.filter(q => q.subject === '经济法基础')
+            }];
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '初级会计备考题库.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        // 导入题库
+        function importLibrary() {
+            document.getElementById('file-input').click();
+        }
+        
+        // 处理文件导入
+        function handleFileImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    const newQuestions = data.flatMap(d => d.questions || []);
+                    questionsData = [...questionsData, ...newQuestions];
+                    filteredQuestions = [...questionsData];
+                    updateStats();
+                    renderQuestions();
+                    alert(`✅ 导入成功！新增${newQuestions.length}道题`);
+                } catch (err) {
+                    alert('❌ 导入失败：' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+        
+        // 初始化
+        loadLibrary();
+    </script>
+</body>
+</html>

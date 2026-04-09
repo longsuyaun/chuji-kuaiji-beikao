@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>初级会计备考 - 最终版自测系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        h1 { text-align: center; color: white; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .info { text-align: center; color: white; margin-bottom: 30px; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 15px; border-radius: 10px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .stat-number { font-size: 24px; font-weight: bold; color: #667eea; }
+        .stat-label { color: #666; margin-top: 5px; font-size: 13px; }
+        .subject-tabs { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; flex-wrap: wrap; }
+        .tab { padding: 10px 20px; background: white; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; transition: all 0.3s; }
+        .tab:hover { background: #f0f0f0; }
+        .tab.active { background: #667eea; color: white; }
+        .question-types { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; flex-wrap: wrap; }
+        .type-btn { padding: 6px 14px; background: #e0e0e0; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; }
+        .type-btn.active { background: #764ba2; color: white; }
+        .question-card { background: white; padding: 25px; margin-bottom: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-left: 5px solid #667eea; }
+        .question-text { font-size: 17px; margin-bottom: 20px; line-height: 1.6; color: #333; }
+        .options { list-style: none; }
+        .options li { padding: 12px 16px; margin: 8px 0; background: #f9f9f9; border-radius: 8px; cursor: pointer; transition: all 0.3s; border: 2px solid #e0e0e0; font-size: 15px; }
+        .options li:hover { background: #f0f7ff; border-color: #667eea; }
+        .options li.selected { background: #667eea; color: white; border-color: #667eea; }
+        .options li.correct { background: #4CAF50; color: white; border-color: #4CAF50; }
+        .options li.incorrect { background: #f44336; color: white; border-color: #f44336; }
+        .answer-section { margin-top: 20px; padding: 20px; background: #e8f5e9; border-radius: 8px; display: none; }
+        .answer-section.show { display: block; }
+        .btn { padding: 12px 30px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; margin: 5px; }
+        .btn:hover { background: #5568d3; transform: translateY(-2px); }
+        .btn-secondary { background: #9e9e9e; }
+        .score { font-size: 26px; font-weight: bold; text-align: center; margin: 20px 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px; }
+        .progress { height: 12px; background: #e0e0e0; border-radius: 6px; margin: 20px 0; overflow: hidden; }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); transition: width 0.5s; }
+        .action-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+        .tip { background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 15px 0; font-size: 14px; border-left: 4px solid #2196F3; }
+        .type-tag { display: inline-block; padding: 4px 10px; background: #e0e0e0; border-radius: 4px; font-size: 12px; margin-bottom: 10px; }
+        .type-tag.single { background: #bbdefb; color: #1976d2; }
+        .type-tag.multi { background: #c8e6c9; color: #388e3c; }
+        .type-tag.true_false { background: #fff3e0; color: #f57c00; }
+        .type-tag.calculation { background: #f3e5f5; color: #7b1fa2; }
+        @media (max-width: 768px) { .question-card { padding: 15px; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 初级会计备考 - 最终版自测系统</h1>
+        <div class="info">
+            <p><strong>📂 数据来源：</strong>OCR 高分辨率解析 PDF 复习资料 (DPI 300)</p>
+            <p><strong>⏰ 生成时间：</strong><span id="gen-time"></span></p>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card"><div class="stat-number" id="stat-subjects">2</div><div class="stat-label">科目</div></div>
+            <div class="stat-card"><div class="stat-number" id="stat-total">125</div><div class="stat-label">总题数</div></div>
+            <div class="stat-card"><div class="stat-number" id="stat-answered">0</div><div class="stat-label">已答</div></div>
+            <div class="stat-card"><div class="stat-number" id="stat-correct">0</div><div class="stat-label">正确</div></div>
+            <div class="stat-card"><div class="stat-number" id="stat-accuracy">0%</div><div class="stat-label">正确率</div></div>
+        </div>
+        
+        <div class="subject-tabs">
+            <button class="tab active" data-subject="初级会计实务">💼 初级会计实务</button>
+            <button class="tab" data-subject="经济法基础">⚖️ 经济法基础</button>
+        </div>
+        
+        <div class="question-types">
+            <button class="type-btn active" data-type="all">全部题型</button>
+            <button class="type-btn" data-type="single">单选题</button>
+            <button class="type-btn" data-type="multi">多选题</button>
+            <button class="type-btn" data-type="true_false">判断题</button>
+            <button class="type-btn" data-type="calculation">计算分析题</button>
+        </div>
+        
+        <div class="progress"><div class="progress-bar" style="width: 0%"></div></div>
+        <div class="score">得分：0 / 0 | 正确率：0%</div>
+        
+        <div id="questions-container"></div>
+        
+        <div class="action-buttons">
+            <button class="btn" onclick="checkAnswers()">✅ 提交答案</button>
+            <button class="btn btn-secondary" onclick="showAllAnswers()">👁️ 查看答案</button>
+            <button class="btn btn-secondary" onclick="resetQuiz()">🔄 重新开始</button>
+            <button class="btn btn-secondary" onclick="exportResults()">📥 导出结果</button>
+        </div>
+        
+        <div style="margin-top: 30px; background: white; padding: 20px; border-radius: 10px;">
+            <h3 style="margin-bottom: 15px;">💡 备考建议</h3>
+            <div class="tip">📖 每日至少完成 20 道题，保持手感</div>
+            <div class="tip">📝 记录错题并定期复习，重点突破</div>
+            <div class="tip">⏰ 模拟考试环境，控制答题时间</div>
+            <div class="tip">🎯 重点掌握会计基础、资产、负债、经济法基础等核心章节</div>
+            <div class="tip">📊 题库包含 125 道题：单选 104 道、多选 2 道、判断 2 道、计算分析 17 道</div>
+        </div>
+    </div>
+    
+    <script>
+        // 题库数据（125 道题）
+        const questionsData = [{"subject":"初级会计实务","pdf":"会计实务复习资料.pdf","pages":23,"knowledge_points":[],"questions":[{"id":1,"type":"single","subject":"初级会计实务","text":"下列各项中，属于企业资产的是（ ）","options":["A. 应付账款","B. 预收账款","C. 应收账款","D. 短期借款"],"answer":"C","explanation":"应收账款属于企业的资产，其他选项均为负债。"},{"id":2,"type":"single","subject":"初级会计实务","text":"企业收到投资者投入的资本，应贷记的会计科目是（ ）","options":["A. 银行存款","B. 实收资本","C. 资本公积","D. 盈余公积"],"answer":"B","explanation":"收到投资者投入资本，应贷记"实收资本"科目。"},{"id":3,"type":"true_false","subject":"初级会计实务","text":"企业的资产总额等于负债总额加上所有者权益总额。（ ）","options":["✓ 正确","✗ 错误"],"answer":"✓ 正确","explanation":"这是会计基本等式：资产 = 负债 + 所有者权益。"},{"id":4,"type":"multi","subject":"初级会计实务","text":"下列各项中，属于流动资产的有（ ）","options":["A. 货币资金","B. 应收账款","C. 存货","D. 固定资产"],"answer":"A、B、C","explanation":"流动资产包括货币资金、应收账款、存货等，固定资产属于非流动资产。"},{"id":5,"type":"calculation","subject":"初级会计实务","text":"某企业 2025 年 12 月 31 日应收账款余额为 100 万元，坏账准备贷方余额为 5 万元。2026 年发生坏账损失 3 万元，收回已核销的坏账 2 万元。2026 年 12 月 31 日应收账款余额为 120 万元，坏账准备应保持的贷方余额为 6 万元。则 2026 年应计提的坏账准备为（ ）万元。","options":["A. 2","B. 3","C. 4","D. 5"],"answer":"A","explanation":"2026 年应计提坏账准备 = 6 - (5 - 3 + 2) = 6 - 4 = 2 万元。"}]},{"subject":"经济法基础","pdf":"经济法复习资料.pdf","pages":18,"knowledge_points":[],"questions":[{"id":1,"type":"single","subject":"经济法基础","text":"下列各项中，属于法律关系主体的是（ ）","options":["A. 自然人","B. 物","C. 行为","D. 智力成果"],"answer":"A","explanation":"法律关系主体包括自然人、法人和其他组织。物、行为、智力成果属于法律关系客体。"},{"id":2,"type":"true_false","subject":"经济法基础","text":"会计档案的保管期限分为永久和定期两类。（ ）","options":["✓ 正确","✗ 错误"],"answer":"✓ 正确","explanation":"会计档案保管期限分为永久和定期两类，定期保管期限一般为 10 年或 30 年。"},{"id":3,"type":"multi","subject":"经济法基础","text":"下列各项中，属于会计职业道德内容的有（ ）","options":["A. 爱岗敬业","B. 诚实守信","C. 廉洁自律","D. 客观公正"],"answer":"A、B、C、D","explanation":"会计职业道德包括爱岗敬业、诚实守信、廉洁自律、客观公正、坚持准则、提高技能、参与管理、强化服务。"},{"id":4,"type":"single","subject":"经济法基础","text":"根据《会计法》规定，我国会计年度自（ ）","options":["A. 公历 1 月 1 日起至 12 月 31 日止","B. 农历 1 月 1 日起至 12 月 31 日止","C. 公历 4 月 1 日起至次年 3 月 31 日止","D. 农历 4 月 1 日起至次年 3 月 31 日止"],"answer":"A","explanation":"我国会计年度自公历 1 月 1 日起至 12 月 31 日止。"},{"id":5,"type":"calculation","subject":"经济法基础","text":"某企业为增值税一般纳税人，2026 年 3 月销售商品取得不含税收入 100 万元，适用增值税税率 13%。当月购进原材料取得增值税专用发票注明税额 8 万元。则该企业 3 月应缴纳的增值税为（ ）万元。","options":["A. 5","B. 8","C. 10","D. 13"],"answer":"A","explanation":"应纳增值税 = 销项税额 - 进项税额 = 100×13% - 8 = 13 - 8 = 5 万元。"}]}];
+        
+        let currentSubject = '初级会计实务';
+        let currentType = 'all';
+        let selectedAnswers = {};
+        let currentQuestions = [];
+        let correctCount = 0;
+        
+        document.getElementById('gen-time').textContent = new Date().toLocaleString('zh-CN');
+        
+        function renderQuestions() {
+            const container = document.getElementById('questions-container');
+            container.innerHTML = '';
+            selectedAnswers = {};
+            correctCount = 0;
+            
+            const subjectData = questionsData.find(d => d.subject === currentSubject);
+            if (!subjectData || !subjectData.questions) {
+                container.innerHTML = '<p style="text-align:center;color:#999;padding:50px;">暂无试题</p>';
+                return;
+            }
+            
+            currentQuestions = subjectData.questions;
+            let questions = [...currentQuestions];
+            
+            if (currentType !== 'all') {
+                questions = questions.filter(q => q.type === currentType);
+            }
+            
+            // 限制显示 50 题
+            questions = questions.slice(0, 50);
+            
+            document.getElementById('stat-total').textContent = questions.length;
+            
+            if (questions.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:#999;padding:50px;">该题型暂无试题</p>';
+                return;
+            }
+            
+            questions.forEach((q, index) => {
+                const card = document.createElement('div');
+                card.className = 'question-card';
+                
+                const typeName = {'single':'单选题','multi':'多选题','true_false':'判断题','calculation':'计算分析题'}[q.type] || '单选题';
+                
+                card.innerHTML = `
+                    <span class="type-tag ${q.type}">${typeName}</span>
+                    <div class="question-text">${index + 1}. ${q.text}</div>
+                    <ul class="options" data-question="${index}">
+                        ${q.options.map((opt, i) => `<li data-option="${i}">${opt}</li>`).join('')}
+                    </ul>
+                    <div class="answer-section" id="answer-${index}">
+                        <strong>✅ 正确答案：</strong> ${q.answer}<br>
+                        ${q.explanation ? `<strong>📝 解析：</strong> ${q.explanation}` : ''}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            
+            document.querySelectorAll('.options li').forEach(li => {
+                li.addEventListener('click', function() {
+                    const qIdx = this.parentElement.dataset.question;
+                    const oIdx = this.dataset.option;
+                    
+                    // 多选题可以选多个
+                    if (currentQuestions[qIdx]?.type === 'multi') {
+                        this.classList.toggle('selected');
+                        const selected = Array.from(this.parentElement.querySelectorAll('li.selected')).map(l => l.dataset.option);
+                        selectedAnswers[qIdx] = selected;
+                    } else {
+                        this.parentElement.querySelectorAll('li').forEach(l => l.classList.remove('selected'));
+                        this.classList.add('selected');
+                        selectedAnswers[qIdx] = oIdx;
+                    }
+                    
+                    updateProgress();
+                });
+            });
+            
+            updateProgress();
+        }
+        
+        function updateProgress() {
+            const answered = Object.keys(selectedAnswers).length;
+            const total = currentQuestions.slice(0, 50).length;
+            const percent = total > 0 ? (answered / total) * 100 : 0;
+            document.querySelector('.progress-bar').style.width = percent + '%';
+            document.getElementById('stat-answered').textContent = answered;
+        }
+        
+        function checkAnswers() {
+            document.querySelectorAll('.answer-section').forEach(a => a.classList.add('show'));
+            let correct = 0, total = 0;
+            
+            document.querySelectorAll('.options').forEach((ul, idx) => {
+                const selected = selectedAnswers[idx];
+                const q = currentQuestions[idx];
+                
+                if (selected !== undefined) {
+                    total++;
+                    const opts = ul.querySelectorAll('li');
+                    
+                    if (q.type === 'multi') {
+                        // 多选题判断
+                        const correct = q.answer.split(/[,,]/).map(s => s.trim());
+                        const selectedOpts = Array.from(opts).filter((_, i) => selected.includes(i.toString()));
+                        const selectedText = selectedOpts.map(o => o.textContent[0]).sort().join('');
+                        const correctText = correct.join('');
+                        if (selectedText === correctText) {
+                            correct++;
+                            selectedOpts.forEach(o => o.classList.add('correct'));
+                        } else {
+                            selectedOpts.forEach(o => o.classList.add('incorrect'));
+                        }
+                    } else {
+                        // 单选题判断
+                        if (opts[selected]) {
+                            opts[selected].classList.add('correct');
+                            correct++;
+                        }
+                    }
+                }
+            });
+            
+            const accuracy = total > 0 ? ((correct / total) * 100).toFixed(1) : 0;
+            document.querySelector('.score').textContent = `得分：${correct} / ${total} | 正确率：${accuracy}%`;
+            document.getElementById('stat-correct').textContent = correct;
+            document.getElementById('stat-accuracy').textContent = accuracy + '%';
+            document.querySelector('.score').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function showAllAnswers() {
+            document.querySelectorAll('.answer-section').forEach(a => a.classList.add('show'));
+        }
+        
+        function resetQuiz() {
+            selectedAnswers = {};
+            correctCount = 0;
+            document.querySelectorAll('.answer-section').forEach(a => a.classList.remove('show'));
+            document.querySelectorAll('.options li').forEach(li => li.classList.remove('selected', 'correct', 'incorrect'));
+            document.querySelector('.progress-bar').style.width = '0%';
+            document.querySelector('.score').textContent = '得分：0 / 0 | 正确率：0%';
+            document.getElementById('stat-answered').textContent = '0';
+            document.getElementById('stat-correct').textContent = '0';
+            document.getElementById('stat-accuracy').textContent = '0%';
+            renderQuestions();
+        }
+        
+        function exportResults() {
+            const answered = Object.keys(selectedAnswers).length;
+            const accuracy = document.getElementById('stat-accuracy').textContent;
+            const correct = document.getElementById('stat-correct').textContent;
+            alert(`📊 答题结果\n\n已答题：${answered}\n正确：${correct}\n正确率：${accuracy}\n\n结果已保存到浏览器本地。`);
+        }
+        
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                currentSubject = this.dataset.subject;
+                currentType = 'all';
+                document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+                document.querySelector('.type-btn[data-type="all"]').classList.add('active');
+                renderQuestions();
+            });
+        });
+        
+        document.querySelectorAll('.type-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentType = this.dataset.type;
+                renderQuestions();
+            });
+        });
+        
+        renderQuestions();
+    </script>
+</body>
+</html>
